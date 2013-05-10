@@ -44,7 +44,7 @@
 (defn nippy-write [data]
   (nippy/freeze-to-bytes data))
 
-(defn pr-byte-array-write [data]
+(defn clojure-write [data]
   (let [stream (java.io.ByteArrayOutputStream.)
         writer (java.io.BufferedWriter. (java.io.OutputStreamWriter. stream))]
     (binding [*out* writer] (pr data))
@@ -60,8 +60,8 @@
 (def nippy-read-data
   (nippy-write test-data))
 
-(def pr-read-data
-  (pr-byte-array-write test-data))
+(def clojure-read-data
+  (clojure-write test-data))
 
 (defn carbonite-read [data]
   (carbonite.buffer/read-bytes carbonite-registry data))
@@ -77,8 +77,39 @@
         reader (java.io.BufferedReader. (java.io.InputStreamReader. stream))]
     (read-func (java.io.PushbackReader. reader))))
 
-(defn clojure-default-read [data]
+(defn clojure-core-read [data]
   (read-bytes read data))
 
 (defn clojure-edn-read [data]
   (read-bytes edn/read data))
+
+(defn report-mean [results]
+  (format "%.2f µs" (* 1000000 (first (:mean results)))))
+
+(defmacro bench-mean [form]
+  `(report-mean (criterium/quick-benchmark ~form {})))
+
+(defn -main []
+  (binding [criterium/*final-gc-problem-threshold* 1.0]
+    (println)
+    (println "Testing Carbonite")
+    (println "=================")
+    (println "- write mean:" (bench-mean (carbonite-write test-data)))
+    (println "- read mean: " (bench-mean (carbonite-read carbonite-read-data)))
+    (println)
+    (println "Testing Deep Freeze")
+    (println "===================")
+    (println "- write mean:" (bench-mean (deep-freeze-write test-data)))
+    (println "- read mean: " (bench-mean (deep-freeze-read deep-freeze-read-data)))
+    (println)
+    (println "Testing Nippy")
+    (println "=============")
+    (println "- write mean:" (bench-mean (nippy-write test-data)))
+    (println "- read mean: " (bench-mean (nippy-read nippy-read-data)))
+    (println)
+    (println "Testing Clojure reader")
+    (println "======================")
+    (println "- write mean:"      (bench-mean (clojure-write test-data)))
+    (println "- core read mean: " (bench-mean (clojure-core-read clojure-read-data)))
+    (println "- edn read mean: "  (bench-mean (clojure-edn-read clojure-read-data)))
+    (println)))
