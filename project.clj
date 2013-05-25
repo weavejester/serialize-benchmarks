@@ -8,5 +8,6 @@
                  [org.xerial.snappy/snappy-java "1.0.5-M4"]
                  [com.taoensso/nippy "1.2.0"]
                  [com.twitter/carbonite "1.3.2"]
+                 [cheshire "5.2.0"]
                  [criterium "0.4.1"]]
   :main test-serialize.core)
