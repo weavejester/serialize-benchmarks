@@ -10,4 +10,5 @@
                  [com.twitter/carbonite "1.3.2"]
                  [cheshire "5.2.0"]
                  [criterium "0.4.1"]]
+  :jvm-opts ^:replace ["-server" "-Xmx1g"]
   :main test-serialize.core)
